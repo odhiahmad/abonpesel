@@ -1,10 +1,11 @@
 import React, {useEffect, useState} from 'react';
-import {Button, Container, Fab, Form, Input, Item, Label, Textarea} from 'native-base';
+import {Button, Container, Fab} from 'native-base';
 import {Header} from "react-native-elements";
 import {
-    Dimensions, FlatList,
+    Alert,
+    Dimensions,
+    FlatList,
     Modal,
-    ScrollView,
     StatusBar,
     StyleSheet,
     Text,
@@ -14,9 +15,13 @@ import {
 } from 'react-native';
 import {LinearGradient} from "expo-linear-gradient";
 import Icon from 'react-native-vector-icons/FontAwesome5';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import {_baseURL_} from "../../constant";
 import LoaderModal from "../components/loader";
+import DateTimePicker from '@react-native-community/datetimepicker';
+import moment from 'moment';
+
+
+require('moment/locale/id.js');
 
 function Silahar({navigation}) {
     const [active, setActive] = useState(false);
@@ -36,15 +41,15 @@ function Silahar({navigation}) {
         kegiatan: '',
         keterangan: '',
         volume: '',
-        showTryAgain:false,
-        data:'',
-        loading:false,
+        showTryAgain: false,
+        data: '',
+        loading: false,
 
     });
 
     useEffect(() => {
         getIndex()
-    },[])
+    }, [])
 
     const [text, setText] = React.useState('');
 
@@ -54,15 +59,16 @@ function Silahar({navigation}) {
         var bulan = currentDate.getMonth();
         var tanggal = currentDate.getDate();
 
+        console.log(currentDate)
         setData({
             ...data,
             tanggalShow: false,
-            tanggal: tahun + '-' + bulan + '-' + tanggal
+            tanggal: moment(currentDate).format('DD-MM-YYYY')
         })
 
     };
 
-    const getIndex = () =>{
+    const getIndex = () => {
         setData({
             ...data,
             loading: false,
@@ -84,11 +90,11 @@ function Silahar({navigation}) {
         });
     }
 
-    const renderRow = ({item,index}) =>{
-        return(
+    const renderRow = ({item, index}) => {
+        return (
             <ListItem
                 onPress={() => {
-                    this.props.navigation.navigate('PetaUmumDetail',{'dataItem':item})
+                    this.props.navigation.navigate('PetaUmumDetail', {'dataItem': item})
                 }}
 
                 key={index} bottomDivider>
@@ -110,14 +116,12 @@ function Silahar({navigation}) {
         setData({
             ...data,
             jamMulaiShow: false,
-            jamMulai: jam + ':' + menit +':00'
+            jamMulai: moment(selectedDate).format('hh:mm') + ':00' // March 19th 2021, 9:51:29 am
         })
 
     };
     const onChangeJamAkhir = (event, selectedDate) => {
         const currentDate = selectedDate || date;
-        setShow(Platform.OS === 'ios');
-        setDate(currentDate);
 
         var jam = currentDate.getHours();
         var menit = currentDate.getMinutes();
@@ -127,7 +131,7 @@ function Silahar({navigation}) {
         setData({
             ...data,
             jamAkhirShow: false,
-            jamAkhir: jam + ':' + menit+':00'
+            jamAkhir: moment(selectedDate).format('hh:mm') + ':00'
         })
     };
 
@@ -171,48 +175,71 @@ function Silahar({navigation}) {
         setActive(true)
     }
     const submit = () => {
-        this.setState({
-            loading: true,
-        });
-        fetch(_baseURL_ + '/silahar', {
-            method: 'POST',
-            headers: {
-                Accept: 'application/json',
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                    nama_lengkap: this.state.nama,
-                    email: this.state.email,
-                    no_telp: this.state.no_hp,
-                    file: this.state.gambar,
-                    pesan: this.state.pesan,
-                    file_ext: this.state.file_ext
+        if (data.tanggal === '') {
+            Alert.alert(
+                "Notifikasi",
+                "Inputkan Data Semua nya",
+                [
+                    {text: "OK", onPress: () => console.log("OK Pressed")}
+                ],
+                {cancelable: false}
+            );
+        } else {
+            setData({
+                ...data,
+                loading: true,
+            });
+            fetch(_baseURL_ + '/silahar', {
+                method: 'POST',
+                headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
                 },
-            ),
+                body: JSON.stringify({
+                        tanggal: data.tanggal,
+                        jamMulai: data.jamMulai,
+                        jamAkhir: data.jamAkhir,
+                        jumlahKegiatan: data.jumlahKegiatan,
+                        kegiatan: data.kegiatan,
+                        keterangan: data.keterangan,
+                        volume: data.volume
+                    },
+                ),
 
-        }).then((response) => response.json()).then((responseJson) => {
+            }).then((response) => response.json()).then((responseJson) => {
+                if (responseJson.status === true) {
+                    setData({
+                        ...data,
+                        loading: false,
+                    });
+                    Alert.alert(
+                        "Notifikasi",
+                        "Berhasil menginputkan data kegiatan",
+                        [
+                            {text: "OK", onPress: () => console.log("OK Pressed")}
+                        ],
+                        {cancelable: false}
+                    );
+                } else {
+                    setData({
+                        ...data,
+                        loading: false,
+                    });
+                    Alert.alert(
+                        "Notifikasi",
+                        "Gagal",
+                        [
+                            {text: "OK", onPress: () => console.log("OK Pressed")}
+                        ],
+                        {cancelable: false}
+                    );
+                }
 
-
-            if (responseJson.status === true) {
-
-
-                Alert.alert(
-                    "Notifikasi",
-                    "Berhasil menginputkan data laporan",
-                    [
-                        {text: "OK", onPress: () => console.log("OK Pressed")}
-                    ],
-                    {cancelable: false}
-                );
-
-
-            } else {
-
-                this.setState({
+            }).catch((error) => {
+                setData({
+                    ...data,
                     loading: false,
-
                 });
-
                 Alert.alert(
                     "Notifikasi",
                     "Gagal",
@@ -221,31 +248,165 @@ function Silahar({navigation}) {
                     ],
                     {cancelable: false}
                 );
-
-            }
-
-
-        }).catch((error) => {
-
-
-            this.setState({
-                loading: false,
             });
-
-            Alert.alert(
-                "Notifikasi",
-                "Gagal",
-                [
-                    {text: "OK", onPress: () => console.log("OK Pressed")}
-                ],
-                {cancelable: false}
-            );
-        });
-
+        }
     }
 
     return (
         <Container>
+            <Modal
+                propagateSwipe={true}
+                animationInTiming="300"
+                animationType="slide"
+                transparent={true}
+                visible={active}
+                onRequestClose={() => {
+                    setActive(false)
+                }}>
+                <View style={{
+                    backgroundColor: 'white',
+                    height: '97%',
+                    marginTop: 'auto'
+                }}>
+
+                    <Header
+                        containerStyle={{height: 60, backgroundColor: '#28527a'}}
+                        leftComponent={
+                            <Icon onPress={() => setActive(false)} name={'arrow-left'} size={24}
+                                  style={{color: '#74C6F4', textAlign: 'center'}}/>
+                        }
+
+                        placement="center"
+                        centerComponent={
+                            {text: 'Tambah Pekerjaan', style: {fontSize: 16, color: '#fff',fontWeight:'bold'}}
+                        }
+                    />
+                    <View style={{flex: 1, padding: 20, alignContent: 'center', alignItems: 'center'}}>
+                        <View style={{marginTop: 10}}>
+                            <Button onPress={() => showTanggal()} rounded block style={styles.pickerStyle}>
+                                {
+                                    data.tanggal !== '' ?
+                                        <Text style={styles.textStyle}>Tanggal {data.tanggal}</Text> :
+                                        <Text style={styles.textStyle}>Pilih Tanggal</Text>
+                                }
+                            </Button>
+                        </View>
+                        {data.tanggalShow && (
+                            <DateTimePicker
+                                value={date}
+                                mode={"date"}
+                                is24Hour={true}
+                                display="default"
+                                onChange={onChangeTanggal}
+                            />
+                        )}
+                        <View style={{marginTop: 10}}>
+                            <Button onPress={() => showjamMulai()} rounded block style={styles.pickerStyle}>
+                                {
+                                    data.jamMulai !== '' ?
+                                        <Text style={styles.textStyle}>Jam Mulai {data.jamMulai}</Text> :
+                                        <Text style={styles.textStyle}>Pilih Jam Mulai</Text>
+                                }
+
+                            </Button>
+                        </View>
+                        {data.jamMulaiShow && (
+                            <DateTimePicker
+                                value={date}
+                                mode={"time"}
+                                is24Hour={true}
+                                display="default"
+                                onChange={onChangeJamMulai}
+                            />
+                        )}
+                        <View style={{marginTop: 10}}>
+                            <Button onPress={() => showJamAkhir()} rounded block style={styles.pickerStyle}>
+                                {
+                                    data.jamAkhir !== '' ?
+                                        <Text style={styles.textStyle}>Jam Akhir {data.jamAkhir}</Text> :
+                                        <Text style={styles.textStyle}>Pilih Jam Akhir</Text>
+                                }
+
+                            </Button>
+                        </View>
+                        {data.jamAkhirShow && (
+                            <DateTimePicker
+                                value={date}
+                                mode={"time"}
+                                is24Hour={true}
+                                display="default"
+                                onChange={onChangeJamAkhir}
+                            />
+                        )}
+                        <TextInput
+                            value={data.volume}
+                            onChangeText={(volume) => setData({
+                                ...data,
+                                volume: volume
+                            })}
+                            maxLength={2}
+                            placeholder='Volume'
+                            clearButtonMode='always'
+                            keyboardType={"numeric"}
+                            selectionColor="#999999"
+                            underlineColorAndroid="lightblue"
+                            autoCapitalize='words'
+                            style={styles.inputBox}
+                        />
+                        <TextInput
+                            value={data.jumlahKegiatan}
+                            onChangeText={(jumlahKegiatan) => setData({
+                                ...data,
+                                jumlahKegiatan: jumlahKegiatan
+                            })}
+                            maxLength={2}
+                            placeholder='Jumlah Kegiatan'
+                            clearButtonMode='always'
+                            keyboardType={"numeric"}
+                            selectionColor="#999999"
+                            underlineColorAndroid="lightblue"
+                            autoCapitalize='words'
+                            style={styles.inputBox}
+                        />
+                        <TextInput
+                            value={data.kegiatan}
+                            onChangeText={(kegiatan) => setData({
+                                ...data,
+                                kegiatan: kegiatan
+                            })}
+                            placeholder='Kegiatan'
+                            clearButtonMode='always'
+                            selectionColor="#999999"
+                            underlineColorAndroid="lightblue"
+                            autoCapitalize='words'
+                            style={styles.inputBox}
+                        />
+                        <TextInput
+                            value={data.keterangan}
+                            onChangeText={(keterangan) => setData({
+                                ...data,
+                                keterangan: keterangan
+                            })}
+                            placeholder='Keterangan'
+                            clearButtonMode='always'
+                            selectionColor="#999999"
+                            underlineColorAndroid="lightblue"
+                            autoCapitalize='words'
+                            style={styles.inputBox}
+                        />
+                        <View style={{marginTop: 20}}>
+                            <Button onPress={submit} rounded block style={styles.buttonSubmit}>
+
+                                <Text style={styles.textStyle}>Submit</Text>
+
+
+                            </Button>
+                        </View>
+                    </View>
+                </View>
+
+            </Modal>
+
             <LoaderModal
                 loading={data.loading}/>
             <StatusBar translucent backgroundColor="rgba(0,0,0,0.4)"/>
@@ -264,7 +425,7 @@ function Silahar({navigation}) {
                     marginBottom: 10,
                 }}>
                     <TouchableOpacity
-                        // onPress={() => navigate("AmbilAbsen", {absen_type: this.state.tap_in ? 2 : 1})}
+                        onPress={() => navigation.navigate("RiwayatSilahar")}
                     >
 
                         <LinearGradient
@@ -315,7 +476,7 @@ function Silahar({navigation}) {
                     containerStyle={{}}
                     style={{backgroundColor: '#5067FF'}}
                     position="bottomRight"
-                    onPress={ modalTambahAktif }
+                    onPress={modalTambahAktif}
                 >
                     <Icon name={'plus'} size={16} style={{color: '#74C6F4', textAlign: 'center'}}/>
                 </Fab>
@@ -330,8 +491,11 @@ const windoWidth = Dimensions.get('window').width; // berguna untuk menyesuaikan
 const windowHeight = Dimensions.get('window').height; // sama seperti comment di atas
 export default Silahar
 const styles = StyleSheet.create({
-    pickerStyle:{
-        height: 60,width:350,backgroundColor:'#28527a'
+    pickerStyle: {
+        height: 60, width: 350, backgroundColor: '#28527a'
+    },
+    buttonSubmit: {
+        height: 60, width: 200, backgroundColor: 'red'
     },
     inputTextStyle: {
         paddingTop: 30

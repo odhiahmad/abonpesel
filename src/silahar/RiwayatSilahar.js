@@ -3,9 +3,10 @@ import React, {Component} from "react";
 import {Avatar, Header, Icon, ListItem} from 'react-native-elements';
 
 import LoaderModal from "../components/loader";
+import {_baseURL_} from "../../constant";
 
 
-export default class PetaUmum extends Component {
+export default class RiwayatSilahar extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -30,10 +31,10 @@ export default class PetaUmum extends Component {
 
     getIndex() {
         this.setState({
-            loading: true,
+            loading: false,
             showTryAgain: false,
         });
-        return fetch(baseApi + '/potensi-kecelakaan/latlng').then((response) => response.json()).then((responseJson) => {
+        return fetch(_baseURL_ + '/potensi-kecelakaan/latlng').then((response) => response.json()).then((responseJson) => {
             this.setState({
                 loading: false,
                 data: responseJson.results,
@@ -132,13 +133,13 @@ export default class PetaUmum extends Component {
                     }}
 
                     leftComponent={
-                        <Icon onPress={() => this.props.navigation.pop()} type='ionicon' name='arrow-back-outline'
+                        <Icon onPress={() => this.props.navigation.pop()} size={27} type='ionicon' name='arrow-back-outline'
                               color='#fff'
                         />}
                     statusBarProps={{barStyle: 'light-content'}}
                     barStyle="light-content"
                     placement="center"
-                    centerComponent={{text: 'Riwayat Silahar', style: {color: '#fff', fontWeight: 'bold'}}}
+                    centerComponent={{text: 'Riwayat Silahar', style: {color: '#fff',fontSize: 16, fontWeight: 'bold'}}}
                 />
                 {/*<SearchBar*/}
                 {/*    placeholder="Type Here..."*/}

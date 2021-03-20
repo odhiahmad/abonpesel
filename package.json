@@ -28,7 +28,7 @@
     "expo-permissions": "~10.0.0",
     "expo-status-bar": "~1.0.3",
     "indicative": "^7.4.4",
-    "moment": "^2.27.0",
+    "moment": "^2.29.1",
     "native-base": "^2.15.2",
     "react": "16.13.1",
     "react-dom": "16.13.1",

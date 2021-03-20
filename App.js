@@ -8,6 +8,8 @@ import Home from './src/HomeAbon'
 import Agenda from './src/AgendaAbon'
 import Riwayat from './src/RiwayatAbon'
 import Silahar from './src/silahar/Silahar'
+import RiwayatSilahar from "./src/silahar/RiwayatSilahar";
+
 import Profile from './src/ProfileAbon'
 import AmbilAbsen from './src/AmbilAbsen'
 import AjukanIzin from './src/AjukanIzin'
@@ -110,6 +112,11 @@ const StackSilahar = () => (
     <Stack.Navigator>
 
         <Stack.Screen name="Silahar" component={Silahar}
+                      options={{
+                          headerShown: false,
+                      }}
+        />
+        <Stack.Screen name="RiwayatSilahar" component={RiwayatSilahar}
                       options={{
                           headerShown: false,
                       }}
